@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+
+  rollout:
+    image: ghcr.io/vd2org/rollout:0.0.0
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - SECRET=${SECRET:?Please provide the webhook token!}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
