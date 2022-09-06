@@ -1,15 +1,16 @@
 # Copyright (C) 2022 by Vd.
 # This file is part of RollOut, the docker compose/docker stack deploy daemon
 # RollOut is released under the MIT License (see LICENSE).
+
+
 import json
 import sys
 from datetime import datetime
 from hashlib import sha512
-from io import FileIO, TextIOBase
 
-import requests
 import click
 import jwt
+import requests
 
 JWT_TTL = 60 * 5  # 5 minutes
 
@@ -53,6 +54,9 @@ def hello(secret, url, name, file, env):
 
     if res.status_code == 444:
         click.echo(click.style(f"Error status code {data['code']}!", fg='red'))
+        click.echo("")
+    else:
+        click.echo(click.style(f"Okay.", fg='yellow'))
         click.echo("")
 
     click.echo("STDOUT:")

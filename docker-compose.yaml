@@ -3,12 +3,13 @@ version: "3.9"
 services:
 
   rollout:
-    image: ghcr.io/vd2org/rollout:0.0.1
+    image: ghcr.io/vd2org/rollout:v0.0.1
     build:
       context: ./
       dockerfile: Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/root/.docker/config.json
     environment:
       - SECRET=${SECRET:?Please provide the webhook token!}
     ports:
