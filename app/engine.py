@@ -27,7 +27,7 @@ class AuthError(Exception):
 JWT_OPTS = {"require": ["exp"]}
 
 
-async def deploy(request: Request):
+async def execute(request: Request):
     try:
         body = await request.body()
 
@@ -39,11 +39,15 @@ async def deploy(request: Request):
 
         data = json.loads(body)
 
+        cmd = data['command']
         file = data['file']
         name = data['name']
         env = data['env']
 
-        res = docker.stack.deploy(file, name, env)
+        if cmd not in ('stack', 'compose'):
+            raise ValueError
+
+        res = docker.stack.deploy(file, name, env) if cmd == 'stack' else docker.compose.up(file, name, env)
 
         res = {
             "stdout": res.stdout,
@@ -59,14 +63,14 @@ async def deploy(request: Request):
         }
 
         return JSONResponse(res, status_code=444)
-    except (JSONDecodeError, KeyError):
+    except (JSONDecodeError, KeyError, ValueError):
         return PlainTextResponse("Malformed json", status_code=400)
     except (AuthError, InvalidTokenError):
         return PlainTextResponse("Unauthorized", status_code=401)
 
 
 routes = [
-    Route('/{path:path}', deploy, methods=['POST']),
+    Route('/{path:path}', execute, methods=['POST']),
 ]
 
 app = Starlette(debug=True, routes=routes)

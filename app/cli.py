@@ -16,17 +16,18 @@ JWT_TTL = 60 * 5  # 5 minutes
 
 
 @click.command()
+@click.option('-c', '--command', required=True, help='Work mode', type=click.Choice(['stack', 'compose']))
 @click.option('-s', '--secret', required=True, help='Webhook deploy secret')
 @click.option('-u', '--url', required=True, help='Webhook url')
-@click.option('-n', '--name', required=True, help='Stack deployment name')
+@click.option('-n', '--name', required=True, help='Deployment name')
 @click.option('-f', '--file', default='-', help='Stack file')
 @click.option('-e', '--env', multiple=True, help='Environment variable')
-def hello(secret, url, name, file, env):
+def deploy(command, secret, url, name, file, env):
     """Calls deploy webhook."""
 
     try:
         env = dict(e.split("=") for e in env)
-    except:
+    except Exception:
         click.echo(click.style('Error: malformed env option. Must be "NAME=VALUE".', fg='red'))
         sys.exit(1)
 
@@ -37,6 +38,7 @@ def hello(secret, url, name, file, env):
             text = f.read()
 
     data = json.dumps({
+        'command': command,
         'file': text,
         'name': name,
         'env': env
@@ -44,11 +46,11 @@ def hello(secret, url, name, file, env):
 
     payload = {'exp': int(datetime.utcnow().timestamp()) + JWT_TTL, 'body_hash': sha512(data).hexdigest()}
     token = jwt.encode(payload, secret, algorithm="HS256")
-    print(token)
     res = requests.post(url, data=data, headers={"Authorization": f"Bearer {token}"})
 
     if res.status_code == 401:
         click.echo(click.style('Error: unauthorized!', fg='red'))
+        return
 
     data = res.json()
 
@@ -72,4 +74,4 @@ def hello(secret, url, name, file, env):
 
 
 if __name__ == '__main__':
-    hello()
+    deploy()

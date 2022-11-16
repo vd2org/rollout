@@ -73,3 +73,55 @@ class docker:  # noqa
                 return Result(response.stdout.decode(), response.stderr.decode())
             except ErrorReturnCode as e:
                 raise Error(e.exit_code, e.stdout.decode(), e.stderr.decode()) from None
+
+    class compose:  # noqa
+        @staticmethod
+        def up(file: str, name: str, env: dict[str, str] = None, remove_orphans: bool = True) -> Result:
+            """\
+            Calls docker compose up command:
+
+            Usage:  docker compose up [OPTIONS] [SERVICE...]
+
+            Create and start containers
+
+            Options:
+                  --abort-on-container-exit   Stops all containers if any container was stopped. Incompatible with -d
+                  --always-recreate-deps      Recreate dependent containers. Incompatible with --no-recreate.
+                  --attach stringArray        Attach to service output.
+                  --attach-dependencies       Attach to dependent containers.
+                  --build                     Build images before starting containers.
+              -d, --detach                    Detached mode: Run containers in the background
+                  --exit-code-from string     Return the exit code of the selected service container. Implies \
+            --abort-on-container-exit
+                  --force-recreate            Recreate containers even if their configuration and image haven't changed.
+                  --no-build                  Don't build an image, even if it's missing.
+                  --no-color                  Produce monochrome output.
+                  --no-deps                   Don't start linked services.
+                  --no-log-prefix             Don't print prefix in logs.
+                  --no-recreate               If containers already exist, don't recreate them. Incompatible with \
+            --force-recreate.
+                  --no-start                  Don't start the services after creating them.
+                  --pull string               Pull image before running ("always"|"missing"|"never") (default "missing")
+                  --quiet-pull                Pull without printing progress information.
+                  --remove-orphans            Remove containers for services not defined in the Compose file.
+              -V, --renew-anon-volumes        Recreate anonymous volumes instead of retrieving data from the \
+            previous containers.
+                  --scale scale               Scale SERVICE to NUM instances. Overrides the scale setting in the \
+            Compose file if present.
+              -t, --timeout int               Use this timeout in seconds for container shutdown when attached or \
+            when containers are already running. (default 10)
+                  --wait                      Wait for services to be running|healthy. Implies detached mode.
+            """
+
+            env = env or dict()
+
+            params = ["-f", "-", "-p", name, "up", "--no-build", "-d"]
+
+            if remove_orphans:
+                params.append("--remove-orphans")
+
+            try:
+                response = d.compose(_in=file, _env=env, *params)
+                return Result(response.stdout.decode(), response.stderr.decode())
+            except ErrorReturnCode as e:
+                raise Error(e.exit_code, e.stdout.decode(), e.stderr.decode()) from None
